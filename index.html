@@ -81,8 +81,8 @@ td select{font-size:.78rem;padding:2px 4px;width:100%}
 .lvl{display:inline-block;min-width:44px;text-align:center;border-radius:4px;padding:1px 6px;font-family:var(--f-mono);font-size:.76rem;border:1px solid var(--rule)}
 .lvl.l1{background:#cfe4f7;color:#0e2f55}.lvl.l2{background:#8fc0ea;color:#0e2f55}.lvl.l3{background:#3d85cf;color:#fff}
 details summary{cursor:pointer;font-weight:600}
-.ex{display:grid;gap:14px;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}.ex .g{grid-row:span 2}.ex .ancho{grid-column:1/-1}
-@media (max-width:960px){.ex{grid-template-columns:minmax(0,1fr)}.ex .g{grid-row:auto}}
+.ex{display:grid;gap:14px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.ex .ancho{grid-column:1/-1}
+@media (max-width:960px){.ex{grid-template-columns:minmax(0,1fr)}}
 .sub{border:1px solid var(--rule);border-radius:5px;padding:10px;display:grid;gap:6px;min-width:0;align-content:start}.sub h3{font-size:.9rem}
 .ec{width:100%;min-width:0}.ec.g1{height:540px}.ec.r1{height:250px}.ec.p1{height:300px}.ec.c1{height:300px}
 .acc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.78rem;color:var(--ink2)}.acc b{font-family:var(--f-mono);color:var(--accent)}
@@ -108,12 +108,13 @@ footer{padding-block:0 40px}footer p{margin-bottom:6px}
 
 <section class="row2" id="s-mapa">
 <div class="panel" id="p-mapa">
-<div class="ph"><h2>Mapa de calor por zonas</h2><span class="tag">IDW · mapa de calles</span></div>
+<div class="ph"><h2>Mapa de calor por zonas</h2><span class="tag">IDW · relieve y calles</span></div>
 <div class="controls">
+<div class="seg" role="group" aria-label="Vista del mapa"><button class="btn" data-mv="rel" type="button">Relieve</button><button class="btn" data-mv="calles" type="button">Calles</button></div>
 <div class="seg" role="group" aria-label="Variable"><button class="btn" data-v="pm" type="button">PM2.5 típico</button><button class="btn" data-v="ex" type="button">% días &gt; 37</button></div>
-<div class="seg" role="group" aria-label="Representación"><button class="btn" data-r="idw" type="button">Continuo (IDW)</button><button class="btn" data-r="zon" type="button">Por municipio</button><button class="btn" data-r="est" type="button">Estaciones</button></div>
-<label class="f">Mapa base<select id="base"><option value="auto">Gris claro u oscuro (Esri)</option><option value="osm">Calles (OpenStreetMap)</option><option value="none">Sin mapa base (sin conexión)</option></select></label>
-<label class="f">Opacidad <output id="o-op"></output><input type="range" id="op" min="0.2" max="1" step="0.05"></label>
+<div class="seg solo-calles" role="group" aria-label="Representación"><button class="btn" data-r="idw" type="button">Continuo (IDW)</button><button class="btn" data-r="zon" type="button">Por municipio</button><button class="btn" data-r="est" type="button">Estaciones</button></div>
+<label class="f solo-calles">Mapa base<select id="base"><option value="auto">Gris claro u oscuro (Esri)</option><option value="osm">Calles (OpenStreetMap)</option><option value="none">Sin mapa base (sin conexión)</option></select></label>
+<label class="f solo-calles">Opacidad <output id="o-op"></output><input type="range" id="op" min="0.2" max="1" step="0.05"></label>
 </div>
 <div class="controls">
 <label class="f">Mes<select id="mes"></select></label>
@@ -128,7 +129,7 @@ footer{padding-block:0 40px}footer p{margin-bottom:6px}
 <span class="note" id="n-red" style="max-width:46ch"></span>
 </div>
 <p class="note" id="n-base" hidden>Si el mapa de OpenStreetMap sale vacío o con el aviso «Access blocked», es porque sus servidores pueden rechazar páginas abiertas como archivo local (sin encabezado <i>Referer</i>). En GitHub Pages o con un servidor local (<code>python -m http.server</code>) carga bien; si no, usa el mapa gris.</p>
-<div class="mapwrap"><div id="mapa" role="img" aria-label="Mapa de calor del PM2.5 en el Valle de Aburrá"></div>
+<div class="mapwrap"><div class="ec" id="ex-geo" style="position:absolute;inset:0;height:auto" role="img" aria-label="Mapa de calor del PM2.5 por municipio con las estaciones como puntos"></div><div id="mapa" role="img" aria-label="Mapa de calor del PM2.5 en el Valle de Aburrá"></div>
 <div class="mapover mapbtns"><button class="btn ghost sm" id="encuadre" type="button">Encuadrar el valle</button></div>
 <div class="mapover puntero" id="puntero">Pasa el puntero sobre el valle para leer el valor interpolado.</div></div>
 <div><div class="legbar" id="legbar"><span class="legmark" id="lg-lim" title="37 µg/m³: límite de 24 h"></span></div><div class="legrow"><span id="lg0"></span><span id="lg1"></span><span id="lg2"></span></div></div>
@@ -144,13 +145,12 @@ footer{padding-block:0 40px}footer p{margin-bottom:6px}
 </section>
 
 <section class="panel" id="s-explora">
-<div class="ph"><h2>Explorador de zonas</h2><span class="tag">Tablero con acciones · Apache ECharts</span></div>
-<p class="note">Cuatro vistas enlazadas, como las acciones de un tablero de Tableau o de QGIS: lo que haces en una cambia las demás y el mapa de arriba. Sigue la hora, el mes, el tipo de día y el plan de contingencia de los controles del mapa.</p>
+<div class="ph"><h2>Explorador de zonas</h2><span class="tag">Vistas enlazadas · Apache ECharts</span></div>
+<p class="note">Vistas enlazadas, como las acciones de un tablero de Tableau o de QGIS: lo que haces en una cambia las demás y el mapa de arriba. Sigue la hora, el mes, el tipo de día y el plan de contingencia de los controles del mapa.</p>
 <div class="tiles" id="ex-kpi"></div>
-<div class="acc"><span><b>Clic</b> en un municipio, una estación o una barra: seleccionar</span><span><b>Clic</b> en el reloj: cambiar la hora</span><span><b>Arrastrar</b> sobre un eje de las líneas: resaltar estaciones</span>
+<div class="acc"><span><b>Clic</b> en un municipio, una estación o una barra: seleccionar (también en el mapa)</span><span><b>Clic</b> en el reloj: cambiar la hora</span><span><b>Arrastrar</b> sobre un eje de las líneas: resaltar estaciones</span>
 <span class="resalte" id="ex-res" hidden><span id="ex-res-n"></span><button class="btn ghost sm" id="ex-res-x" type="button">Quitar resaltado</button></span></div>
 <div class="ex">
-<div class="sub g"><h3>Cartograma de estaciones <span class="note" id="ex-geo-t"></span></h3><div class="ec g1" id="ex-geo" role="img" aria-label="Cartograma del PM2.5 por municipio con las estaciones como puntos"></div></div>
 <div class="sub"><h3>Ranking de municipios</h3><div class="ec r1" id="ex-rank" role="img" aria-label="Barras del PM2.5 por municipio"></div></div>
 <div class="sub"><h3>Reloj de 24 horas <span class="note" id="ex-rel-t"></span></h3><div class="ec r1" id="ex-reloj" role="img" aria-label="Gráfico polar del PM2.5 por hora"></div></div>
 <div class="sub ancho"><h3>Estaciones en paralelo: cómo cambia cada una durante el día <span class="note">(µg/m³ por franja; a la derecha, % de días sobre 37)</span></h3><div class="ec p1" id="ex-par" role="img" aria-label="Coordenadas paralelas por estación"></div></div>
@@ -277,13 +277,13 @@ const diasPlan=lv=>lv.reduce((a,j,s)=>a+O.esperados[s][j],0), costoPlan=lv=>lv.r
 const UNIF=[0,1,2,3].map(j=>({d:diasPlan(Array(NS).fill(j)),c:costoPlan(Array(NS).fill(j))}));
 
 /* ---------- estado (y enlace compartible) ---------- */
-const st={v:"pm",r:"idw",b:"auto",op:.8,m:0,t:0,h:8,red:0,pl:"no",sel:null,fe:String(O.estaciones[O.estaciones.length-1]),fd:0,fm:"con",ps:PSTAR0,wm:5,wf:1,cal:"p",B:155,mio:Array(NS).fill(0)};
+const st={mv:"rel",v:"pm",r:"idw",b:"auto",op:.8,m:0,t:0,h:8,red:0,pl:"no",sel:null,fe:String(O.estaciones[O.estaciones.length-1]),fd:0,fm:"con",ps:PSTAR0,wm:5,wf:1,cal:"p",B:155,mio:Array(NS).fill(0)};
 const DEF=JSON.parse(JSON.stringify(st));
 let PLAN_OPT=nivelesDe(MEJOR[st.B]);
 function leeHash(){const q=new URLSearchParams(location.hash.slice(1));
   const en=(k,lista)=>{const v=q.get(k);if(v!=null&&lista.includes(v))st[k]=v};
   const num=(k,lo,hi,ent)=>{const x=q.get(k);if(x==null||x==="")return;const n=+x;if(isFinite(n)&&n>=lo&&n<=hi&&(!ent||Number.isInteger(n)))st[k]=n};
-  en("v",["pm","ex"]);en("r",["idw","zon","est"]);en("b",["auto","osm","none"]);en("pl",["no","opt","mio"]);en("fm",["con","sin","cmp"]);en("cal",["p","r"]);en("fe",Object.keys(FAN));
+  en("mv",["rel","calles"]);en("v",["pm","ex"]);en("r",["idw","zon","est"]);en("b",["auto","osm","none"]);en("pl",["no","opt","mio"]);en("fm",["con","sin","cmp"]);en("cal",["p","r"]);en("fe",Object.keys(FAN));
   num("op",.2,1);num("m",0,12,1);num("t",0,2,1);num("h",0,23,1);num("red",0,30,1);num("ps",.01,.99);num("wm",1,10,1);num("wf",1,5,1);num("B",0,CMAX,1);num("fd",0,(FAN[st.fe]||[]).length-1,1);
   if(st.red%10)st.red=0;
   const s=q.get("sel");if(s){const [t,v]=[s[0],s.slice(2)];if(t==="m"){const k=MAPA.municipios.findIndex(m=>m.nombre===v);if(k>=0)st.sel={t:"m",k}}else if(t==="e"&&ESTX.has(v))st.sel={t:"e",cod:+v}}
@@ -291,7 +291,7 @@ function leeHash(){const q=new URLSearchParams(location.hash.slice(1));
   PLAN_OPT=nivelesDe(MEJOR[st.B])}
 let tHash=null;
 function escribeHash(){clearTimeout(tHash);tHash=setTimeout(()=>{const q=new URLSearchParams();
-  for(const k of["v","r","b","op","m","t","h","red","pl","fe","fd","fm","ps","wm","wf","cal","B"])if(st[k]!==DEF[k])q.set(k,st[k]);
+  for(const k of["mv","v","r","b","op","m","t","h","red","pl","fe","fd","fm","ps","wm","wf","cal","B"])if(st[k]!==DEF[k])q.set(k,st[k]);
   if(st.sel)q.set("sel",st.sel.t==="m"?"m:"+MAPA.municipios[st.sel.k].nombre:"e:"+st.sel.cod);
   if(st.mio.some(x=>x))q.set("mio",st.mio.join(""));
   history.replaceState(null,"",q.toString()?"#"+q.toString():location.pathname+location.search)},120)}
@@ -429,7 +429,7 @@ function lectura(){const zz=ZON.filter(z=>ok(z.m));if(!zz.length)return;
   $("#tab-zon tbody").innerHTML=[...zz].sort((a,b)=>b.m-a.m).map(z=>`<tr class="clic${z.k===ks?" sel":""}" data-k="${z.k}"><td class="trunc" title="${z.n}">${z.n}</td><td class="mono">${nf1(z.m)}</td><td class="mono">${nf1(z.mx)}</td><td class="mono">${nf1(z.a)}</td></tr>`).join("")}
 $("#tab-zon tbody").addEventListener("click",e=>{const tr=e.target.closest("tr[data-k]");if(!tr)return;const k=+tr.dataset.k;
   const ya=st.sel&&st.sel.t==="m"&&st.sel.k===k;selecciona({t:"m",k});
-  if(!ya){VIEW={center:centroMun(k),zoom:Math.max(VIEW.zoom,zoomEncuadre()+1)};Plotly.relayout(gdM,{"mapbox.center":VIEW.center,"mapbox.zoom":VIEW.zoom})}});
+  if(!ya&&st.mv==="calles"){VIEW={center:centroMun(k),zoom:Math.max(VIEW.zoom,zoomEncuadre()+1)};Plotly.relayout(gdM,{"mapbox.center":VIEW.center,"mapbox.zoom":VIEW.zoom})}});
 
 /* ---------- perfiles de la selección ---------- */
 const gdP=$("#perfil"),gdH=$("#huella");
@@ -621,6 +621,7 @@ $("#k-est").textContent=`${SD.length} / ${EST.length}`;$("#k-h").textContent=OUT
 function sincroniza(){
   $$("[data-v]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===st.v));$$("[data-r]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.r===st.r));
   $$("[data-fm]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.fm===st.fm));$$("[data-cal]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.cal===st.cal));
+  $$("[data-mv]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mv===st.mv));$$(".solo-calles").forEach(e=>e.hidden=st.mv==="rel");$("#mapa").style.visibility=st.mv==="rel"?"hidden":"visible";$("#ex-geo").hidden=st.mv!=="rel";$$(".mapover").forEach(e=>e.style.display=st.mv==="rel"?"none":"");
   $("#base").value=st.b;$("#n-base").hidden=!(st.b==="osm"&&location.protocol==="file:");$("#op").value=st.op;$("#o-op").textContent=Math.round(st.op*100)+" %";
   $("#mes").value=st.m;$("#tipo").value=st.t;$("#hora").value=st.h;$("#o-hora").textContent=hh(st.h);
   $("#red").value=st.red;$("#red").disabled=st.pl!=="no";$("#o-red").textContent=st.pl!=="no"?"(plan activo)":st.red?"−"+st.red+" %":"0 %";$("#plan").value=st.pl;
@@ -635,11 +636,24 @@ function sincroniza(){
 /* ---------- explorador de zonas (Apache ECharts): vistas enlazadas con acciones de tablero ---------- */
 const HAY_EC=!!window.echarts;let RESALTE=null;
 const FR=[["Madrugada",0,5],["Mañana",6,11],["Tarde",12,17],["Noche",18,23]];
-const ecs={};function ec(id){const el=$("#"+id);if(!ecs[id]){ecs[id]=echarts.init(el,null,{renderer:"canvas"});new ResizeObserver(()=>ecs[id].resize()).observe(el)}return ecs[id]}
+const ecs={};function ec(id){const el=$("#"+id);if(!ecs[id]){ecs[id]=echarts.init(el,null,{renderer:"canvas"});new ResizeObserver(()=>{ecs[id].resize();if(id==="ex-geo")ponRaster()}).observe(el)}return ecs[id]}
 const ecTxt=()=>({fontFamily:CUERPO,color:css("--ink2"),fontSize:11});
 const escalaEc=()=>[0,.2,.4,.6,.8,1].map(t=>rgb(col(t)));
-if(HAY_EC)echarts.registerMap("valle",GEO.mun,{});
+/* contornos suavizados (Chaikin): la capa oficial viene simplificada y se vería angulosa */
+function chaikin(r,n){for(let k=0;k<n;k++){const o=[];for(let i=0;i<r.length-1;i++){const a=r[i],b=r[i+1];o.push([.75*a[0]+.25*b[0],.75*a[1]+.25*b[1]],[.25*a[0]+.75*b[0],.25*a[1]+.75*b[1]])}o.push(o[0]);r=o}return r}
+const suave=g=>({type:"Feature",properties:g.properties,geometry:{type:g.geometry.type,coordinates:g.geometry.type==="Polygon"?g.geometry.coordinates.map(r=>chaikin(r,3)):g.geometry.coordinates.map(pl=>pl.map(r=>chaikin(r,3)))}});
+const RIO_S=(()=>{let r=GEO.rio;for(let k=0;k<3;k++){const o=[r[0]];for(let i=0;i<r.length-1;i++){const a=r[i],b=r[i+1];o.push([.75*a[0]+.25*b[0],.75*a[1]+.25*b[1]],[.25*a[0]+.75*b[0],.25*a[1]+.75*b[1]])}o.push(r[r.length-1]);r=o}return r})();
+if(HAY_EC)echarts.registerMap("valle",{type:"FeatureCollection",features:GEO.mun.features.map(suave)},{});
 function franja(cod,a,b){const v=[];for(let h=a;h<=b;h++){const x=valor(cod,{h});if(x!=null)v.push(x)}return v.length?media(v):null}
+/* trama IDW recortada con los contornos suavizados (para el cartograma del explorador) */
+const RECORTE_S=new Path2D();{const M=K/G,I=GEO.inv;GEO.mun.features.forEach(f=>{const g=suave(f).geometry,pol=g.type==="Polygon"?[g.coordinates]:g.coordinates;pol.forEach(rings=>rings.forEach(r=>{r.forEach(([lo,la],i)=>{const x=(I[0][0]+I[0][1]*lo+I[0][2]*la)*M,y=(I[1][0]+I[1][1]*lo+I[1][2]*la)*M;i?RECORTE_S.lineTo(x,y):RECORTE_S.moveTo(x,y)});RECORTE_S.closePath()}))})}
+function rasterSuave(vm){const im=cctx.createImageData(NX,NY),d=im.data;for(let q=0;q<GRID.length;q++){const g=GRID[q];if(g!==g)continue;const c=col(g/vm);d[q*4]=c[0];d[q*4+1]=c[1];d[q*4+2]=c[2];d[q*4+3]=255}
+  cctx.putImageData(im,0,0);gctx.clearRect(0,0,grande.width,grande.height);gctx.save();gctx.clip(RECORTE_S);gctx.imageSmoothingEnabled=true;gctx.imageSmoothingQuality="high";
+  gctx.drawImage(chica,0,0,grande.width,grande.height);gctx.restore();return grande.toDataURL("image/png")}
+let IMG_IDW="";
+function ponRaster(){const g=ecs["ex-geo"];if(!g||!IMG_IDW)return;const a=g.convertToPixel({geoIndex:0},ESQ[0]),b=g.convertToPixel({geoIndex:0},ESQ[2]);if(!a||!b)return;
+  g.setOption({graphic:[{id:"idw",type:"image",zlevel:1,silent:true,style:{image:IMG_IDW,x:a[0],y:a[1],width:b[0]-a[0],height:b[1]-a[1],opacity:.9}}]})}
+
 function dibujaExplora(){if(!HAY_EC)return;RESALTE=null;
   const vm=VMAX(),Z=zonales(),zz=MUN.map((m,k)=>({k,n:m.n,v:Z[k]})).filter(z=>ok(z.v)).sort((a,b)=>b.v-a.v),tx=ecTxt(),ink=css("--ink"),rule=css("--rule"),ac=css("--accent"),bad=css("--bad"),band=css("--band");
   const horas=[...Array(24).keys()],serie=horas.map(h=>serieSel({h}));
@@ -650,15 +664,21 @@ function dibujaExplora(){if(!HAY_EC)return;RESALTE=null;
   $("#ex-res").hidden=!RESALTE;if(RESALTE)$("#ex-res-n").textContent=RESALTE.size+(RESALTE.size===1?" estación resaltada":" estaciones resaltadas");
   /* cartograma: regiones coloreadas + estaciones con ondas */
   const dim=c=>RESALTE&&!RESALTE.has(c);
+  if(st.mv==="rel"){IMG_IDW=rasterSuave(vm);
+  const capa=(extra={})=>({map:"valle",nameProperty:"nombre",roam:true,scaleLimit:{min:1,max:9},zoom:1,layoutCenter:["52%","46%"],layoutSize:"86%",...extra});
+  const zoomGeo=ecs["ex-geo"]&&ecs["ex-geo"].getOption()&&ecs["ex-geo"].getOption().geo?ecs["ex-geo"].getOption().geo[0]:null;
+  const vista=zoomGeo?{zoom:zoomGeo.zoom,center:zoomGeo.center}:{};
   ec("ex-geo").setOption({animationDuration:350,textStyle:tx,
-    tooltip:{trigger:"item",confine:true,backgroundColor:css("--panel"),borderColor:rule,textStyle:{color:ink,fontFamily:CUERPO,fontSize:12},formatter:p=>p.seriesType==="effectScatter"?`<b>${p.data.nombre}</b><br>${p.data.mun}<br>${nf1(p.data.value[2])}${U()}`:`<b>${p.name}</b><br>Promedio zonal ${nf1(p.value)}${U()}`},
-    visualMap:{min:0,max:vm,dimension:0,seriesIndex:0,orient:"horizontal",left:10,bottom:6,itemWidth:12,itemHeight:120,text:[nf0(vm),"0"],calculable:false,inRange:{color:escalaEc()},textStyle:tx},
-    geo:{map:"valle",nameProperty:"nombre",roam:true,scaleLimit:{min:1,max:8},zoom:1.3,label:{show:true,fontSize:10,color:ink,textBorderColor:css("--panel"),textBorderWidth:2},itemStyle:{areaColor:band,borderColor:css("--panel"),borderWidth:1.2},emphasis:{label:{color:ink,fontWeight:700},itemStyle:{borderColor:ink,borderWidth:2}}},
-    series:[{type:"map",geoIndex:0,nameProperty:"nombre",data:zz.map(z=>({name:z.n,value:z.v,itemStyle:st.sel&&st.sel.t==="m"&&st.sel.k===z.k?{borderColor:ac,borderWidth:3.5}:undefined}))},
-      {type:"effectScatter",coordinateSystem:"geo",rippleEffect:{scale:3.2,brushType:"stroke",period:4},showEffectOn:"render",zlevel:2,
+    tooltip:{trigger:"item",confine:true,backgroundColor:css("--panel"),borderColor:rule,textStyle:{color:ink,fontFamily:CUERPO,fontSize:12},formatter:p=>p.seriesType==="effectScatter"?`<b>${p.data.nombre}</b><br>${p.data.mun}<br>${nf1(p.data.value[2])}${U()}`:p.seriesType==="map"?`<b>${p.name}</b><br>Promedio zonal ${nf1(p.value)}${U()}`:""},
+    visualMap:[{type:"continuous",min:0,max:vm,show:true,seriesIndex:0,orient:"horizontal",left:10,bottom:6,itemWidth:12,itemHeight:130,text:[nf0(vm),"0"],calculable:false,inRange:{color:escalaEc()},outOfRange:{color:band},textStyle:tx}],
+    geo:[capa({...vista,label:{show:false},itemStyle:{areaColor:band,borderColor:css("--panel"),borderWidth:1.5,shadowBlur:26,shadowColor:"rgba(20,24,38,.38)",shadowOffsetY:12},emphasis:{disabled:true},select:{disabled:true}}),
+         capa({...vista,silent:true,zlevel:3,label:{show:true,fontSize:11,fontWeight:600,color:ink,textBorderColor:css("--panel"),textBorderWidth:3},itemStyle:{areaColor:"transparent",borderColor:css("--panel"),borderWidth:2.2},regions:st.sel&&st.sel.t==="m"?[{name:MUN[st.sel.k].n,itemStyle:{borderColor:ac,borderWidth:4.5}}]:[]})],
+    series:[{type:"map",geoIndex:0,nameProperty:"nombre",data:zz.map(z=>({name:z.n,value:z.v})),emphasis:{label:{show:false}}},
+      {type:"lines",coordinateSystem:"geo",geoIndex:0,polyline:true,silent:true,zlevel:2,data:[{coords:RIO_S}],lineStyle:{color:"#4aa3e8",width:4,opacity:.85,shadowBlur:10,shadowColor:"#4aa3e8",cap:"round"}},
+      {type:"effectScatter",coordinateSystem:"geo",geoIndex:0,rippleEffect:{scale:3.4,brushType:"stroke",period:4},showEffectOn:"render",zlevel:4,
        data:ests.map(x=>({nombre:x.e.nombre,mun:x.e.municipio,cod:x.e.cod,value:[x.e.lon,x.e.lat,x.v],symbolSize:10+Math.min(1.4,x.v/vm)*14,
-         itemStyle:{color:x.v>37?bad:css("--good"),borderColor:st.sel&&st.sel.t==="e"&&st.sel.cod===x.e.cod?ac:ink,borderWidth:st.sel&&st.sel.t==="e"&&st.sel.cod===x.e.cod?3.5:1.2,opacity:dim(x.e.cod)?.18:1}}))}]},true);
-  $("#ex-geo-t").textContent="· rueda para acercar, arrastra para mover";
+         itemStyle:{color:x.v>37?bad:css("--good"),borderColor:st.sel&&st.sel.t==="e"&&st.sel.cod===x.e.cod?ac:"#fff",borderWidth:st.sel&&st.sel.t==="e"&&st.sel.cod===x.e.cod?4:2,shadowBlur:8,shadowColor:"rgba(0,0,0,.35)",opacity:dim(x.e.cod)?.18:1}}))}]},true);
+  const g0=ecs["ex-geo"];ponRaster();if(!g0.__roam){g0.__roam=true;g0.on("georoam",()=>{const o=g0.getOption().geo[0];g0.setOption({geo:[{},{zoom:o.zoom,center:o.center}]});ponRaster()})}}
   /* ranking */
   ec("ex-rank").setOption({animationDuration:300,textStyle:tx,grid:{left:92,right:36,top:6,bottom:22},
     xAxis:{type:"value",max:vm,axisLabel:{color:tx.color,fontSize:10},splitLine:{lineStyle:{color:rule}}},
@@ -683,6 +703,7 @@ function dibujaExplora(){if(!HAY_EC)return;RESALTE=null;
       data:fil.map(r=>({value:r.vs,nombre:r.x.e.nombre,mun:r.x.e.municipio,cod:r.x.e.cod,lineStyle:{color:rgb(col(media(r.vs.slice(0,4))/vm)),width:st.sel&&st.sel.t==="e"&&st.sel.cod===r.x.e.cod?5:2.4}}))}]},true);
   ecs["ex-par"].__fil=fil}
 const ink2=()=>css("--ink2");
+const hex=c=>"#"+c.map(v=>Math.round(v).toString(16).padStart(2,"0")).join("");
 function enlazaExplora(){if(!HAY_EC)return;
   ec("ex-geo").on("click",p=>{if(p.seriesType==="effectScatter")selecciona({t:"e",cod:p.data.cod});else if(p.name){const k=MUN.findIndex(m=>m.n===p.name);if(k>=0)selecciona({t:"m",k})}});
   ec("ex-rank").on("click",p=>{const k=MUN.findIndex(m=>m.n===p.name);if(k>=0)selecciona({t:"m",k})});
@@ -692,14 +713,16 @@ function enlazaExplora(){if(!HAY_EC)return;
     const igual=(!nuevo&&!RESALTE)||(nuevo&&RESALTE&&nuevo.size===RESALTE.size&&[...nuevo].every(x=>RESALTE.has(x)));if(igual)return;RESALTE=nuevo;redibujaCarto()});
   $("#ex-res-x").onclick=()=>{RESALTE=null;dibujaExplora()}}
 function redibujaCarto(){$("#ex-res").hidden=!RESALTE;if(RESALTE)$("#ex-res-n").textContent=RESALTE.size+(RESALTE.size===1?" estación resaltada":" estaciones resaltadas");
-  const o=ecs["ex-geo"].getOption(),d=o.series[1].data.map(x=>({...x,itemStyle:{...x.itemStyle,opacity:RESALTE&&!RESALTE.has(x.cod)?.18:1}}));ecs["ex-geo"].setOption({series:[{},{data:d}]})}
+  if(st.mv!=="rel"||!ecs["ex-geo"])return;const o=ecs["ex-geo"].getOption(),d=o.series[2].data.map(x=>({...x,itemStyle:{...x.itemStyle,opacity:RESALTE&&!RESALTE.has(x.cod)?.18:1}}));ecs["ex-geo"].setOption({series:[{},{},{data:d}]})}
 
-function cambioMapa(soloMapa){sincroniza();dibujaMapa();if(!soloMapa){dibujaExplora();dibujaPerfil();dibujaHuella()}escribeHash()}
+function pintaMapa(){if(st.mv==="calles")dibujaMapa();else{calcula();const vm=VMAX();leyenda(vm);lectura()}}
+function cambioMapa(soloMapa){sincroniza();pintaMapa();if(!soloMapa){dibujaExplora();dibujaPerfil();dibujaHuella()}escribeHash()}
 function cambioUmbral(){sincroniza();dibujaAlertas();dibujaCal();dibujaFan();escribeHash()}
 function cambioPlan(){sincroniza();dibujaOpt();if(st.pl!=="no")cambioMapa();else escribeHash()}
 function selecciona(s){const k=x=>x?(x.t==="m"?"m"+x.k:"e"+x.cod):"";st.sel=k(s)===k(st.sel)?null:s;
   if(st.sel&&st.sel.t==="e"&&FAN[String(st.sel.cod)]&&st.fe!==String(st.sel.cod)){st.fe=String(st.sel.cod);st.fd=0;dibujaFan()}
   cambioMapa()}
+$$("[data-mv]").forEach(b=>b.onclick=()=>{if(st.mv===b.dataset.mv)return;st.mv=b.dataset.mv;sincroniza();if(st.mv==="calles")reiniciaMapa();else cambioMapa()});
 $$("[data-v]").forEach(b=>b.onclick=()=>{st.v=b.dataset.v;cambioMapa()});$$("[data-r]").forEach(b=>b.onclick=()=>{st.r=b.dataset.r;cambioMapa()});
 $("#base").onchange=e=>{st.b=e.target.value;sincroniza();reiniciaMapa()};$("#op").oninput=e=>{st.op=+e.target.value;cambioMapa(true)};
 $("#mes").onchange=e=>{st.m=+e.target.value;cambioMapa()};$("#tipo").onchange=e=>{st.t=+e.target.value;cambioMapa()};$("#hora").oninput=e=>{st.h=+e.target.value;cambioMapa()};
@@ -716,7 +739,7 @@ $("#play-anio").onclick=()=>{if(animA){para();return}para();$("#play-anio").text
 $("#compartir").onclick=async()=>{clearTimeout(tHash);escribeHash();await new Promise(r=>setTimeout(r,150));const b=$("#compartir"),t=b.textContent;
   try{await navigator.clipboard.writeText(location.href);b.textContent="Enlace copiado"}catch(e){const i=document.createElement("input");i.value=location.href;document.body.appendChild(i);i.select();document.execCommand("copy");i.remove();b.textContent="Enlace copiado"}
   setTimeout(()=>b.textContent=t,1600)};
-function todo(){memo.clear();sincroniza();dibujaMapa();dibujaExplora();dibujaPerfil();dibujaHuella();dibujaFan();dibujaAlertas();dibujaCal();dibujaOpt();dibujaErr()}
+function todo(){memo.clear();sincroniza();pintaMapa();dibujaExplora();dibujaPerfil();dibujaHuella();dibujaFan();dibujaAlertas();dibujaCal();dibujaOpt();dibujaErr()}
 $("#tema").onclick=()=>{const r=document.documentElement;r.dataset.theme=oscuro()?"light":"dark";Plotly.purge(gdM);mapaListo=false;todo()};
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(!document.documentElement.dataset.theme){Plotly.purge(gdM);mapaListo=false;todo()}});
 enlazaExplora();leeHash();todo();
